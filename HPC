@@ -1,0 +1,326 @@
+https://colab.research.google.com/drive/12MygEHvg6d7BWY3XMDBRRh6y9ZgTSTL3?usp=sharing
+Exp - 1.INRODUCTION TO OPENMP
+#include <stdio.h> 
+#include <omp.h> 
+#define SIZE 10 
+int main() { 
+int arr[SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; 
+int sum = 0; 
+#pragma omp simd reduction(+:sum) 
+for (int i = 0; i < SIZE; i++) { 
+sum += arr[i]; 
+} 
+printf("Sum of array elements: %d\n", sum); 
+return 0; 
+} 
+===================================================
+EXP - 2 PARALLELIZATION USING OPENMP WITH/WITHOUT THREADS
+1. Without Threads (Sequential Execution) 
+#include <stdio.h> 
+#include <time.h> 
+int main() { 
+long long sum = 0; 
+const long size = 100000000; 
+clock_t start = clock();  // Start time 
+for (long i = 0; i < size; i++) { 
+sum += i; 
+} 
+clock_t end = clock();  // End time 
+double time_spent = (double)(end - start) / 
+CLOCKS_PER_SEC; 
+printf("Sequential Sum: %lld\n", sum); 
+printf("Time taken (Sequential): %.4f seconds\n", 
+time_spent); 
+return 0; 
+} 
+2. with threads
+#include <stdio.h> 
+#include <omp.h> 
+int main() { 
+long long sum = 0; 
+const long size = 100000000; 
+double start = omp_get_wtime();  // Start time 
+#pragma omp parallel for reduction(+:sum) 
+for (long i = 0; i < size; i++) { 
+sum += i; 
+} 
+double end = omp_get_wtime();  // End time 
+printf("Parallel Sum: %lld\n", sum); 
+printf("Time taken (Parallel with OpenMP): %.4f seconds\n", end - start); 
+return 0; 
+} 
+==============================================================
+Experiment - 3:  LOOP PARALLELIZATION USING OPENMP
+#include <stdio.h> 
+#include <omp.h> 
+#define SIZE 10  // Use a small array size for demonstration 
+int main() { 
+int arr[SIZE]; 
+long long sum = 0; 
+for (int i = 0; i < SIZE; i++) { 
+arr[i] = 1; 
+} 
+#pragma omp parallel for reduction(+:sum) 
+for (int i = 0; i < SIZE; i++) { 
+sum += arr[i]; 
+printf("Thread %d executing i=%d\n", omp_get_thread_num(), i); 
+}  
+printf("Total sum: %lld\n", sum); 
+return 0; 
+}
+===========================================
+Exp - 4: matrix multiplication 
+#include <stdio.h> 
+#include <omp.h> 
+int main() { 
+int n, m, p; 
+printf("Enter rows for Matrix A (n): "); 
+scanf("%d", &n); 
+printf("Enter columns for Matrix A / rows for Matrix B (m): "); 
+scanf("%d", &m); 
+printf("Enter columns for Matrix B (p): "); 
+scanf("%d", &p); 
+int A[n][m], B[m][p], C[n][p]; 
+printf("Enter elements of Matrix A (%dx%d):\n", n, m); 
+for (int i = 0; i < n; i++) 
+for (int j = 0; j < m; j++) 
+scanf("%d", &A[i][j]); 
+printf("Enter elements of Matrix B (%dx%d):\n", m, p); 
+for (int i = 0; i < m; i++) 
+for (int j = 0; j < p; j++) 
+scanf("%d", &B[i][j]); 
+for (int i = 0; i < n; i++) 
+for (int j = 0; j < p; j++) 
+C[i][j] = 0; 
+double start_time = omp_get_wtime();
+#pragma omp parallel for collapse(2) 
+for (int i = 0; i < n; i++) { 
+for (int j = 0; j < p; j++) { 
+for (int k = 0; k < m; k++) { 
+C[i][j] += A[i][k] * B[k][j]; 
+} 
+} 
+} 
+double end_time = omp_get_wtime(); 
+printf("Result Matrix C (%dx%d):\n", n, p); 
+for (int i = 0; i < n; i++) { 
+for (int j = 0; j < p; j++) { 
+printf("%d ", C[i][j]); 
+} 
+printf("\n"); 
+} 
+return 0; 
+}
+======================================================================================
+Experiment - 5 row major column major 
+#include <stdio.h> 
+#include <omp.h>  
+int main() { 
+    int n, m, p; 
+    printf("Enter rows for Matrix A (n): "); 
+    scanf("%d", &n); 
+    printf("Enter columns for Matrix A / rows for Matrix B (m): "); 
+    scanf("%d", &m); 
+    printf("Enter columns for Matrix B (p): "); 
+    scanf("%d", &p); 
+    int A[n][m], B[m][p], C[n][p]; 
+    printf("Enter elements of Matrix A (%dx%d):\n", n, m); 
+    for (int i = 0; i < n; i++) 
+        for (int j = 0; j < m; j++) 
+            scanf("%d", &A[i][j]); 
+    printf("Enter elements of Matrix B (%dx%d):\n", m, p); 
+    for (int i = 0; i < m; i++) 
+        for (int j = 0; j < p; j++) 
+            scanf("%d", &B[i][j]); 
+    for (int i = 0; i < n; i++) 
+        for (int j = 0; j < p; j++) 
+            C[i][j] = 0; 
+    double start_time = omp_get_wtime(); 
+    #pragma omp parallel for collapse(2) 
+    for (int i = 0; i < n; i++) { 
+        for (int j = 0; j < p; j++) { 
+            for (int k = 0; k < m; k++) { 
+                C[i][j] += A[i][k] * B[k][j]; 
+            } 
+        } 
+    } 
+    double end_time = omp_get_wtime(); 
+    printf("Result Matrix C (%dx%d):\n", n, p); 
+    for (int i = 0; i < n; i++) { 
+        for (int j = 0; j < p; j++) { 
+            printf("%d ", C[i][j]); 
+        } 
+        printf("\n"); 
+    } 
+    printf("\nRow-major order of the result matrix:\n"); 
+    #pragma omp parallel for 
+    for (int i = 0; i < n; i++) { 
+        for (int j = 0; j < p; j++) { 
+            printf("%d ", C[i][j]); 
+        } 
+        printf("\n"); 
+    } 
+    printf("\nColumn-major order of the result matrix:\n"); 
+    #pragma omp parallel for 
+    for (int j = 0; j < p; j++) { 
+        for (int i = 0; i < n; i++) { 
+            printf("%d ", C[i][j]); 
+        } 
+        printf("\n"); 
+} 
+printf("\nMatrix multiplication completed in %.6f seconds.\n", end_time - 
+start_time); 
+return 0; 
+} 
+=================================================================================
+EXPERIMENT - 6  Max of n matrices
+#include <stdio.h> 
+int main() { 
+int n, rows, cols; 
+printf("Enter the number of matrices: "); 
+scanf("%d", &n); 
+printf("Enter the number of rows and columns for each matrix: "); 
+scanf("%d %d", &rows, &cols); 
+int max = -2147483648; // Smallest 32-bit integer 
+for (int m = 0; m < n; m++) { 
+printf("Enter elements for Matrix %d (%dx%d):\n", m + 1, rows, 
+cols); 
+for (int i = 0; i < rows; i++) { 
+for (int j = 0; j < cols; j++) { 
+int num; 
+scanf("%d", &num); 
+if (num > max) { 
+max = num; 
+} 
+} 
+} 
+} 
+printf("Maximum element among all matrices: %d\n", max); 
+return 0; 
+}
+========================================================
+#HPC : 7 VECTOR ADDITION AND MULTIPLICATION USING CUDA C
+code = r"""
+#include <stdio.h>
+#include <cuda_runtime.h>
+__global__ void vector_add_mul(float *A, float *B, float *C_add, float *C_mul, int N) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < N) {
+        C_add[i] = A[i] + B[i];
+        C_mul[i] = A[i] * B[i];
+    }
+}
+int main() {
+    int N;
+    printf("Enter the size of the vectors: ");
+    scanf("%d", &N);
+    size_t size = N * sizeof(float);
+    float *h_A = (float*)malloc(size), *h_B = (float*)malloc(size),
+          *h_C_add = (float*)malloc(size), *h_C_mul = (float*)malloc(size);
+    printf("Enter elements for vector A:\n");
+    for (int i = 0; i < N; ++i) scanf("%f", &h_A[i]);
+    printf("Enter elements for vector B:\n");
+    for (int i = 0; i < N; ++i) scanf("%f", &h_B[i]);
+    float *d_A, *d_B, *d_C_add, *d_C_mul;
+    cudaMalloc(&d_A, size); cudaMalloc(&d_B, size);
+    cudaMalloc(&d_C_add, size); cudaMalloc(&d_C_mul, size);
+    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
+    int threadsPerBlock = 256;
+    vector_add_mul<<<(N + threadsPerBlock - 1) / threadsPerBlock, threadsPerBlock>>>(d_A, d_B, d_C_add, d_C_mul, N);
+    cudaDeviceSynchronize();
+    cudaMemcpy(h_C_add, d_C_add, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C_mul, d_C_mul, size, cudaMemcpyDeviceToHost);
+    printf("\nFirst 10 results of vector addition and multiplication:\n");
+    for (int i = 0; i < 10 && i < N; ++i)
+        printf("A: %.1f + B: %.1f = Add: %.1f | Mul: %.1f \n", h_A[i], h_B[i], h_C_add[i], h_C_mul[i]);
+    cudaFree(d_A); cudaFree(d_B); cudaFree(d_C_add); cudaFree(d_C_mul);
+    free(h_A); free(h_B); free(h_C_add); free(h_C_mul);
+    return 0;
+}
+"""
+with open("vector_add_mul.cu", "w") as f:
+    f.write(code)
+!nvcc -arch=sm_75 -o vector_add_mul vector_add_mul.cu
+!./vector_add_mul
+=====================================================================================
+#HPC : 8 VECTOR SQUARING USING CUDA C
+code = r"""
+#include <stdio.h>
+#include <cuda_runtime.h>
+__global__ void vector_square(float *A, float *C, int N) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < N) C[i] = A[i] * A[i];
+
+int main() {
+    int N;
+    printf("Enter the size of the vector: ");
+    scanf("%d", &N);
+    size_t size = N * sizeof(float);
+    float *h_A = (float*)malloc(size), *h_C = (float*)malloc(size);
+    float *d_A, *d_C;
+    printf("Enter %d elements for the vector:\n", N);
+    for (int i = 0; i < N; ++i) scanf("%f", &h_A[i]);
+    cudaMalloc(&d_A, size); cudaMalloc(&d_C, size);
+    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+    vector_square<<<(N + 255) / 256, 256>>>(d_A, d_C, N);
+    cudaDeviceSynchronize();
+    cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
+    printf("First 10 squared values:\n");
+    for (int i = 0; i < 10 && i < N; ++i)
+        printf("A[%d]: %.1f, Squared: %.1f \n", i, h_A[i], h_C[i]);
+    cudaFree(d_A); cudaFree(d_C); free(h_A); free(h_C);
+    return 0;
+}
+"""
+with open("vector_square.cu", "w") as f:
+    f.write(code)
+!nvcc  -arch=sm_75 -o vector_square vector_square.cu
+!./vector_square
+======================================================================================
+#HPC : 10 MATRIX MULTIPLICATION USING CUDA C
+code = r"""
+#include <stdio.h>
+#include <cuda_runtime.h>
+__global__ void matrix_multiply(float *A, float *B, float *C, int M, int N, int P) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row < M && col < P) {
+        float value = 0;
+        for (int k = 0; k < N; ++k) value += A[row * N + k] * B[k * P + col];
+        C[row * P + col] = value;
+    }
+}
+int main() {
+    int M, N, P;
+    printf("Enter M, N, P: ");
+    scanf("%d %d %d", &M, &N, &P);
+    float *h_A = (float*)malloc(M * N * sizeof(float)), *h_B = (float*)malloc(N * P * sizeof(float)), *h_C = (float*)malloc(M * P * sizeof(float));
+    printf("Enter matrix A (%dx%d):\n", M, N);
+    for (int i = 0; i < M * N; ++i) scanf("%f", &h_A[i]);
+    printf("Enter matrix B (%dx%d):\n", N, P);
+    for (int i = 0; i < N * P; ++i) scanf("%f", &h_B[i]);
+    float *d_A, *d_B, *d_C;
+    cudaMalloc(&d_A, M * N * sizeof(float));
+    cudaMalloc(&d_B, N * P * sizeof(float));
+    cudaMalloc(&d_C, M * P * sizeof(float));
+    cudaMemcpy(d_A, h_A, M * N * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, h_B, N * P * sizeof(float), cudaMemcpyHostToDevice);
+    dim3 threads(16, 16), blocks((P + 15) / 16, (M + 15) / 16);
+    matrix_multiply<<<blocks, threads>>>(d_A, d_B, d_C, M, N, P);
+    cudaDeviceSynchronize();
+    cudaMemcpy(h_C, d_C, M * P * sizeof(float), cudaMemcpyDeviceToHost);
+    printf("Result Matrix C (%dx%d):\n", M, P);
+    for (int i = 0; i < M; ++i) {
+        for (int j = 0; j < P; ++j) printf("C[%d][%d] = %.2f ", i, j, h_C[i * P + j]);
+        printf("\n");
+    }
+    cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
+    free(h_A); free(h_B); free(h_C);
+    return 0;
+}
+"""
+with open("multiplication.cu", "w") as f:
+    f.write(code)
+!nvcc  -arch=sm_75 -o multiplication multiplication.cu
+!./multiplication

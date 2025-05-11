@@ -1,0 +1,260 @@
+GTK
+sudo apt update
+sudo apt install libgtk-3-dev build-essential
+gcc `pkg-config --cflags gtk+-3.0` -o mygtkapp mygtkapp.c `pkg-config --libs gtk+-3.0`
+./mygtkapp
+#include <gtk/gtk.h>
+void on_button_clicked(GtkWidget *widget, gpointer data) {
+    GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(data),
+                                               GTK_DIALOG_DESTROY_WITH_PARENT,
+                                               GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_OK,
+                                               "Hello, GNOME!");
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+int main(int argc, char *argv[]) {
+    gtk_init(&argc, &argv);
+    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window), "Simple GTK+ Program");
+    gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+    gtk_widget_set_size_request(window, 200, 100);
+    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+    GtkWidget *button = gtk_button_new_with_label("Click Me");
+    g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked), window);
+    gtk_container_add(GTK_CONTAINER(window), button);
+    gtk_widget_show_all(window);
+    gtk_main();
+    return 0;
+}
+===================================================================================================================================
+Client / Server - shared mem
+client.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#define SHM_SIZE 1024
+int main() {
+    key_t key = ftok("/tmp", 'A');
+    int shmid = shmget(key, SHM_SIZE, 0666);
+    char *shm_ptr = shmat(shmid, NULL, 0);
+    printf("Client: Sending message to server...\n");
+    strncpy(shm_ptr, "Hello from client", SHM_SIZE);
+    while (*shm_ptr == '\0');
+    printf("Client: Received response from server: %s\n", shm_ptr);
+    shmdt(shm_ptr);
+    return 0;
+}
+server.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#define SHM_SIZE 1024
+int main() {
+    key_t key = ftok("/tmp", 'A');
+    int shmid = shmget(key, SHM_SIZE, IPC_CREAT | 0666);
+    char *shm_ptr = shmat(shmid, NULL, 0);
+    printf("Server: Waiting for client message...\n");
+    while (*shm_ptr == '\0');
+    printf("Server: Received message from client: %s\n", shm_ptr);
+    strncpy(shm_ptr, "Hello from server", SHM_SIZE);
+    shmdt(shm_ptr);
+    shmctl(shmid, IPC_RMID, NULL);
+    return 0;
+}
+--------------
+client & server - socket:
+client.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#define PORT 8080
+#define BUFFER_SIZE 1024
+
+int main() {
+    int sock = 0;
+    struct sockaddr_in server_address;
+    char buffer[BUFFER_SIZE] = {0};
+    const char *message = "Hello from client";
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(PORT);
+    if (inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0) {
+        perror("inet_pton failed");
+        exit(EXIT_FAILURE);
+    }
+    if (connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
+        perror("connect failed");
+        exit(EXIT_FAILURE);
+    }
+    send(sock, message, strlen(message), 0);
+    printf("Message sent to server\n");
+    read(sock, buffer, BUFFER_SIZE);
+    printf("Server: %s\n", buffer);
+    return 0;
+}
+server.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#define PORT 8080
+#define BUFFER_SIZE 1024
+int main() {
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int addrlen = sizeof(address);
+    char buffer[BUFFER_SIZE] = {0};
+    const char *message = "Hello from server";
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+    if (listen(server_fd, 3) < 0) {
+        perror("listen failed");
+        exit(EXIT_FAILURE);
+    }
+    printf("Server listening on port %d...\n", PORT);
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+        perror("accept failed");
+        exit(EXIT_FAILURE);
+    }
+    read(new_socket, buffer, BUFFER_SIZE);
+    printf("Client: %s\n", buffer);
+    send(new_socket, message, strlen(message), 0);
+    printf("Message sent to client\n");
+    return 0;
+}
+============================================================================================================================================================
+Process attributes and usage of forks 
+1.
+a#!/bin/bash 
+echo "Process ID (PID): $$" 
+echo "Parent Process ID (PPID): $PPID" 
+echo "User ID (UID): $UID" 
+echo "Group ID (GID): $GROUPS" 
+2. fork => & 
+#!/bin/bash 
+echo "Parent ID (PID): $$" 
+child_process(){ 
+echo "Child Process ID (PID): $$ " 
+} 
+child_process & 
+wait 
+echo "Parent Process Exits"
+fork => ():
+#!/bin/bash
+echo "Parent process ID: $$"
+(
+  echo "Child process started."
+  echo "Child process ID: $$"
+  sleep 2
+  echo "Child process finished."
+) &
+echo "Parent is doing other work..."
+wait
+echo "Parent process finished."
+============================================================================================================================================================
+awk1.awk
+#!/usr/bin/awk -f 
+# Set the field separator to comma 
+BEGIN { 
+FS="," 
+} 
+# Skip the first line (header) 
+NR == 1 { 
+next 
+} 
+# Print Name and Gender fields 
+{ 
+print "Name: " $1 ", Department: " $3 
+}
+
+data.csv 
+cat data.csv
+Name,Position,Department,Salary
+ajay,manager,account,45000
+sunil,clerk,account,25000
+./awk1/awk data.csv
+Name: ajay, Department: account
+Name: sunil, Department: account
+============================================================================================================================================================
+bash scripts
+1. greatest of 3 numbers:
+echo "Enter 3 numbers:" 
+read a 
+read b 
+read c 
+if [ $a -gt $b ] && [ $a -gt $c ] 
+then 
+echo "$a is greater" 
+elif [ $b-gt $a ] && [ $b -gt $c ] 
+then 
+echo "$b is greater" 
+else 
+echo "$c is greater" 
+fi 
+2.odd / even
+echo "Enter a number:" 
+read a 
+if [ $(($a % 2)) -eq 0 ]; 
+then echo "$a is even"; 
+else echo "$a is odd"; 
+fi 
+3.sum of n numbers:
+echo "ENTER A NUMBER" 
+read n 
+su=0 
+i=0 
+while [ $i -lt $n ] 
+do 
+echo "enter number" 
+read a 
+su=$((su+a)) 
+i=$((i+1)) 
+done 
+echo "the sum is $su" 
+4.fibonacci series
+echo "Enter a number:” 
+read n 
+i=3 
+n1=0 
+n2=1 
+echo "$n1" 
+echo "$n2" 
+while [ $i -le $n ] 
+do 
+n3=$((n1+n2)) 
+echo "$n3" 
+n1=$n2 
+n2=$n3 
+i=$((i+1)) 
+done
+5.factorial
+echo "enter a number:" 
+read a 
+fact=1 
+while [ $a -gt 1 ] do 
+fact=$((fact * a)) 
+a=$((a-1)) done 
+echo "the factorial is $fact" 
+============================================================================================================================================================
