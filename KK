@@ -259,9 +259,11 @@ int main() {
 
 ========================================================
 #HPC : 7 VECTOR ADDITION AND MULTIPLICATION USING CUDA C
+
 code = r"""
 #include <stdio.h>
 #include <cuda_runtime.h>
+
 __global__ void vector_add_mul(float *A, float *B, float *C_add, float *C_mul, int N) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < N) {
@@ -269,78 +271,104 @@ __global__ void vector_add_mul(float *A, float *B, float *C_add, float *C_mul, i
         C_mul[i] = A[i] * B[i];
     }
 }
+
 int main() {
     int N;
     printf("Enter the size of the vectors: ");
     scanf("%d", &N);
+
     size_t size = N * sizeof(float);
+
     float *h_A = (float*)malloc(size), *h_B = (float*)malloc(size),
           *h_C_add = (float*)malloc(size), *h_C_mul = (float*)malloc(size);
+
     printf("Enter elements for vector A:\n");
     for (int i = 0; i < N; ++i) scanf("%f", &h_A[i]);
     printf("Enter elements for vector B:\n");
     for (int i = 0; i < N; ++i) scanf("%f", &h_B[i]);
+
     float *d_A, *d_B, *d_C_add, *d_C_mul;
     cudaMalloc(&d_A, size); cudaMalloc(&d_B, size);
     cudaMalloc(&d_C_add, size); cudaMalloc(&d_C_mul, size);
+
     cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
+
     int threadsPerBlock = 256;
     vector_add_mul<<<(N + threadsPerBlock - 1) / threadsPerBlock, threadsPerBlock>>>(d_A, d_B, d_C_add, d_C_mul, N);
     cudaDeviceSynchronize();
+
     cudaMemcpy(h_C_add, d_C_add, size, cudaMemcpyDeviceToHost);
     cudaMemcpy(h_C_mul, d_C_mul, size, cudaMemcpyDeviceToHost);
+
     printf("\nFirst 10 results of vector addition and multiplication:\n");
     for (int i = 0; i < 10 && i < N; ++i)
         printf("A: %.1f + B: %.1f = Add: %.1f | Mul: %.1f \n", h_A[i], h_B[i], h_C_add[i], h_C_mul[i]);
+
     cudaFree(d_A); cudaFree(d_B); cudaFree(d_C_add); cudaFree(d_C_mul);
     free(h_A); free(h_B); free(h_C_add); free(h_C_mul);
     return 0;
 }
 """
+
 with open("vector_add_mul.cu", "w") as f:
     f.write(code)
 !nvcc -arch=sm_75 -o vector_add_mul vector_add_mul.cu
 !./vector_add_mul
 =====================================================================================
 #HPC : 8 VECTOR SQUARING USING CUDA C
+
+
 code = r"""
 #include <stdio.h>
 #include <cuda_runtime.h>
+
 __global__ void vector_square(float *A, float *C, int N) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < N) C[i] = A[i] * A[i];
+}
 
 int main() {
     int N;
     printf("Enter the size of the vector: ");
     scanf("%d", &N);
+
     size_t size = N * sizeof(float);
     float *h_A = (float*)malloc(size), *h_C = (float*)malloc(size);
     float *d_A, *d_C;
+
     printf("Enter %d elements for the vector:\n", N);
     for (int i = 0; i < N; ++i) scanf("%f", &h_A[i]);
-    cudaMalloc(&d_A, size); cudaMalloc(&d_C, size);
+
+    cudaMalloc(&d_A, size);
+    cudaMalloc(&d_C, size);
     cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+
     vector_square<<<(N + 255) / 256, 256>>>(d_A, d_C, N);
     cudaDeviceSynchronize();
+
     cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
     printf("First 10 squared values:\n");
     for (int i = 0; i < 10 && i < N; ++i)
         printf("A[%d]: %.1f, Squared: %.1f \n", i, h_A[i], h_C[i]);
+
     cudaFree(d_A); cudaFree(d_C); free(h_A); free(h_C);
     return 0;
 }
 """
+
 with open("vector_square.cu", "w") as f:
     f.write(code)
+
 !nvcc  -arch=sm_75 -o vector_square vector_square.cu
 !./vector_square
 ======================================================================================
 #HPC : 10 MATRIX MULTIPLICATION USING CUDA C
+
 code = r"""
 #include <stdio.h>
 #include <cuda_runtime.h>
+
 __global__ void matrix_multiply(float *A, float *B, float *C, int M, int N, int P) {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -350,35 +378,45 @@ __global__ void matrix_multiply(float *A, float *B, float *C, int M, int N, int 
         C[row * P + col] = value;
     }
 }
+
 int main() {
     int M, N, P;
     printf("Enter M, N, P: ");
     scanf("%d %d %d", &M, &N, &P);
+
     float *h_A = (float*)malloc(M * N * sizeof(float)), *h_B = (float*)malloc(N * P * sizeof(float)), *h_C = (float*)malloc(M * P * sizeof(float));
     printf("Enter matrix A (%dx%d):\n", M, N);
     for (int i = 0; i < M * N; ++i) scanf("%f", &h_A[i]);
     printf("Enter matrix B (%dx%d):\n", N, P);
     for (int i = 0; i < N * P; ++i) scanf("%f", &h_B[i]);
+
     float *d_A, *d_B, *d_C;
     cudaMalloc(&d_A, M * N * sizeof(float));
     cudaMalloc(&d_B, N * P * sizeof(float));
     cudaMalloc(&d_C, M * P * sizeof(float));
+
     cudaMemcpy(d_A, h_A, M * N * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, N * P * sizeof(float), cudaMemcpyHostToDevice);
+
     dim3 threads(16, 16), blocks((P + 15) / 16, (M + 15) / 16);
     matrix_multiply<<<blocks, threads>>>(d_A, d_B, d_C, M, N, P);
     cudaDeviceSynchronize();
+
     cudaMemcpy(h_C, d_C, M * P * sizeof(float), cudaMemcpyDeviceToHost);
     printf("Result Matrix C (%dx%d):\n", M, P);
     for (int i = 0; i < M; ++i) {
         for (int j = 0; j < P; ++j) printf("C[%d][%d] = %.2f ", i, j, h_C[i * P + j]);
         printf("\n");
     }
+
     cudaFree(d_A); cudaFree(d_B); cudaFree(d_C);
     free(h_A); free(h_B); free(h_C);
     return 0;
 }
+
+
 """
+
 with open("multiplication.cu", "w") as f:
     f.write(code)
 !nvcc  -arch=sm_75 -o multiplication multiplication.cu
