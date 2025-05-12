@@ -1,123 +1,170 @@
-5. installationa of compiler = sudo apt-get install gcc , sudo apt-get install build-essential
+5. installationa of compiler => sudo apt-get install gcc , sudo apt-get install build-essential
 fibonacci.c
-#include<stdio.h>
-int main()
-{
-int n1=0,n2=1,n3,i,number;
-printf("Enter the number of elements:");
-scanf("%d",&number);
-printf("\n%d %d",n1,n2);
-for(i=2;i<number;++i)
-{
-n3=n1+n2;
-printf(" %d",n3);
-n1=n2;
-n2=n3;
+#include <stdio.h>
+int fibonacci(int n) {
+    if (n == 0)
+        return 0;
+    else if (n == 1)
+        return 1;
+    else
+        return fibonacci(n - 1) + fibonacci(n - 2);
 }
-return 0;
+int main() {
+    int i, number;
+    printf("Enter the number of elements: ");
+    scanf("%d", &number);
+    for (i = 0; i < number; i++) {
+        printf("%d ", fibonacci(i));
+    }
+    return 0;
 }
 fact.c
 #include <stdio.h>
-unsigned int factorial(unsigned int N) {
-int fact = 1, i;
-for (i = 1; i <= N; i++) {
-fact *= i;
+int factorial(int N) {
+    if (N == 0 || N == 1)
+        return 1;
+    else
+        return N * factorial(N - 1);
 }
-return fact;
-}int main() {
-int N = 5;
-int fact = factorial(N);
-printf("Factorial of %d is %d", N, fact);
-return 0;
+int main() {
+    int N;
+    printf("Enter a positive integer: ");
+    scanf("%d", &N);
+    if (N < 0) {
+        printf("Factorial is not defined for negative numbers.\n");
+    } else {
+        int fact = factorial(N);
+        printf("Factorial of %d is %d\n", N, fact);
+    }
+    return 0;
 }
 palindrome.c
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
-int isPalindrome(char str[]) {
-    int len = strlen(str);
-    for (int i = 0; i < len / 2; i++) {
-        if (str[i] != str[len - i - 1])
-            return 0;
-    }
-    return 1;
-}
 int main() {
-    char input[100];
-    printf("Enter a number or string: ");
-    scanf("%s", input);
-    for (int i = 0; input[i]; i++) {
-        input[i] = tolower(input[i]);
+    char str[100];
+    int i, len, isPalindrome = 1;
+    printf("Enter a string or number: ");
+    scanf("%s", str);
+    len = strlen(str);
+    for (i = 0; i < len / 2; i++) {
+        if (str[i] != str[len - i - 1]) {
+            isPalindrome = 0;
+            break;
+        }
     }
-    if (isPalindrome(input))
-        printf("Palindrome\n");
+    if (isPalindrome)
+        printf("It is a palindrome.\n");
     else
-        printf("Not a palindrome\n");
+        printf("It is not a palindrome.\n");
     return 0;
 }
 sort.c
 #include <stdio.h>
-void main (){
-int num[20];
-int i, j, a, n;
-printf("enter number of elements in an array");
-scanf("%d", &n);
-printf("Enter the elements");
-for (i = 0; i < n; ++i)
-scanf("%d", &num[i]);
-for (i = 0; i < n; ++i){
-for (j = i + 1; j < n; ++j){
-if (num[i] < num[j]){
-a = num[i];
-num[i] = num[j];
-num[j] = a;
-}
-}
-}
-printf("The numbers in descending order is:");
-for (i = 0; i < n; ++i){
-printf("%d", num[i]);
-}
+int main() {
+    int arr[100], n, i, j, temp;
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+    printf("Enter %d elements:\n", n);
+    for(i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+    for(i = 0; i < n - 1; i++) {
+        for(j = 0; j < n - i - 1; j++) {
+            if(arr[j] > arr[j + 1]) {
+                temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    printf("Sorted array in ascending order:\n");
+    for(i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    return 0;
 }
 matrix.c
 #include <stdio.h>
 int main() {
-int firstMatrix[2][2], secondMatrix[2][2], result[2][2];
-printf("Enter elements of the first 2x2 matrix:\n");
-for (int i = 0; i < 2; i++) {
-for (int j = 0; j < 2; j++) {
-scanf("%d", &firstMatrix[i][j]);
+    int a[10][10], b[10][10], result[10][10];
+    int r1, c1, r2, c2;
+    int i, j, k;
+    printf("Enter rows and columns of Matrix A: ");
+    scanf("%d %d", &r1, &c1);
+    printf("Enter rows and columns of Matrix B: ");
+    scanf("%d %d", &r2, &c2);
+    if (c1 != r2) {
+        printf("Matrix multiplication not possible. Columns of A must equal rows of B.\n");
+        return 0;
+    }
+    printf("Enter elements of Matrix A:\n");
+    for(i = 0; i < r1; i++) {
+        for(j = 0; j < c1; j++) {
+            scanf("%d", &a[i][j]);
+        }
+    }
+    printf("Enter elements of Matrix B:\n");
+    for(i = 0; i < r2; i++) {
+        for(j = 0; j < c2; j++) {
+            scanf("%d", &b[i][j]);
+        }
+    }
+    for(i = 0; i < r1; i++) {
+        for(j = 0; j < c2; j++) {
+            result[i][j] = 0;
+        }
+    }
+    for(i = 0; i < r1; i++) {
+        for(j = 0; j < c2; j++) {
+            for(k = 0; k < c1; k++) {
+                result[i][j] += a[i][k] * b[k][j];
+            }
+        }}
+    printf("Resultant Matrix:\n");
+    for(i = 0; i < r1; i++) {
+        for(j = 0; j < c2; j++) {
+            printf("%d ", result[i][j]);
+        }
+        printf("\n");
+    }
+    return 0;
 }
-}
-printf("Enter elements of the second 2x2 matrix:\n");
-for (int i = 0; i < 2; i++) {
-for (int j = 0; j < 2; j++) {
-scanf("%d", &secondMatrix[i][j]);
-}}
-for (int i = 0; i < 2; i++) {
-for (int j = 0; j < 2; j++) {
-result[i][j] = 0;
-for (int k = 0; k < 2; k++) {
-result[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
-}
-}
-}
-printf("Resultant Matrix:\n");
-for (int i = 0; i < 2; i++) {
-for (int j = 0; j < 2; j++) {
-printf("%d ", result[i][j]);
-}
-printf("\n");
-}
-return 0;
+employee management.c
+#include <stdio.h>
+struct Employee {
+    int id;
+    char name[50];
+    float salary;
+};
+int main() {
+    struct Employee emp[100];
+    int n, i;
+    printf("Enter number of employees: ");
+    scanf("%d", &n);
+    for (i = 0; i < n; i++) {
+        printf("\nEnter details for employee %d:\n", i + 1);
+        printf("ID: ");
+        scanf("%d", &emp[i].id);
+        printf("Name: ");
+        scanf(" %[^\n]", emp[i].name);  // Read string with spaces
+        printf("Salary: ");
+        scanf("%f", &emp[i].salary);
+    }
+    printf("\nEmployee Details:\n");
+    printf("ID\tName\t\tSalary\n");
+    for (i = 0; i < n; i++) {
+        printf("%d\t%s\t\t%.2f\n", emp[i].id, emp[i].name, emp[i].salary);
+    }
+    return 0;
 }
 ==============================================================================
 8. Writing docker file for simple application development
 $ mkdir dockerfilesample, $ cd dockerfilesample
-Dockerfile:
+Dockerfile: ren Dockerfile.txt Dockerfile
 FROM nginx
 COPY index.html /usr/share/nginx/html
-index.html
+index.html:
 <html>
 <head>
 <title>DockerSample</title>
@@ -127,9 +174,16 @@ index.html
 </body>
 </html>
 docker build -t dockerfilesample .   , docker run -p 8080:80 dockerfilesample
+Find the running container ID:
+docker ps 
+Stop the container: 
+docker stop <CONTAINER_ID> 
+• Remove the container: 
+docker rm <CONTAINER_ID>
 =======================================================================================
+9. push and pull 
 docker build -t myapp:v1 .   ,   docker images  
-docker tag image srimi/docker-demo:v1   , docker push srimi31/docker-demo  , ocker pull srimi31/docker-demo:v1
+docker tag image srimi/docker-demo:v1   , docker push srimi31/docker-demo  , docker pull srimi31/docker-demo:v1
 =======================================================================================
 10. running multiple docker container
 html-cluster/
@@ -153,13 +207,12 @@ server {
 listen 80;
 server_name localhost;
 location / {
-root /usr/share/nginx/html;
-index index.html;
+    root /usr/share/nginx/html;
+    index index.html;
 }
 }
-docker-compose.yml
+docker-compose.yml:
 version: '3.9'
-
 services:
   web-node-1:
     image: nginx:latest
@@ -171,7 +224,6 @@ services:
       - "8081:80"
     networks:
       - html-cluster
-
   web-node-2:
     image: nginx:latest
     container_name: web-node-2
@@ -182,7 +234,6 @@ services:
       - "8082:80"
     networks:
       - html-cluster
-
   web-node-3:
     image: nginx:latest
     container_name: web-node-3
@@ -193,27 +244,26 @@ services:
       - "8083:80"
     networks:
       - html-cluster
-
 networks:
   html-cluster:
     driver: bridge
 run: docker-compose up -d
 =======================================================================================
 11. docker swarm
-docker swarm init --default-addr-pool 10.20.0.0/16
+docker swarm init --default-addr-pool 10.20.0.0(IP)/16
 docker service create --name webapp --replicas 3 -p 8080:80 nginx
 docker service scale webapp=5
 docker service update --image nginx:1.19.8 webapp
 docker service ls --filter name=webapp
 docker ps -a
-docker swarm leave –force
+docker swarm leave –-force
 docker system prune -a --volumes
 =======================================================================================
 12. kubernetes
  C:\Program Files\Docker\Docker\Resources \bin>$ kubectl config get-contexts,  $ kubectl config use-context docker-desktop
 =======================================================================================
 13.minikube:
- C:\Program Files\Docker\Docker\Resources \bin\Minikube>minikube start
+ C:\Program Files\Docker\Docker\Resources\bin\Minikube> Minikube start
 Kubectl cluster-info ,  kubectl create deployment nginx-deployment --image=nginx,   kubectl get pods 
-kubectl expose deployment nginx-deployment --port=80 --type=NodePort  , minikube service nginx-deployment --url
+kubectl expose deployment nginx-deployment --port=80 --type=NodePort  , minikube service nginx-deployment, minikube service nginx-deployment --url
 =======================================================================================
