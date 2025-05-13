@@ -1,4 +1,4 @@
-GTK
+10. GTK
 sudo apt update
 sudo apt install libgtk-3-dev build-essential
 gcc `pkg-config --cflags gtk+-3.0` -o mygtkapp mygtkapp.c `pkg-config --libs gtk+-3.0`
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ===================================================================================================================================
-Client / Server - shared mem
+9b. Client / Server - shared mem
 client.c
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +67,7 @@ int main() {
     return 0;
 }
 --------------
-client & server - socket:
+9a. client & server - socket:
 client.c
 #include <stdio.h>
 #include <stdlib.h>
@@ -145,9 +145,9 @@ int main() {
     return 0;
 }
 ============================================================================================================================================================
-Process attributes and usage of forks 
+8. Process attributes and usage of forks 
 1.
-a#!/bin/bash 
+#!/bin/bash 
 echo "Process ID (PID): $$" 
 echo "Parent Process ID (PPID): $PPID" 
 echo "User ID (UID): $UID" 
@@ -161,44 +161,88 @@ echo "Child Process ID (PID): $$ "
 child_process & 
 wait 
 echo "Parent Process Exits"
-fork => ():
-#!/bin/bash
-echo "Parent process ID: $$"
-(
-  echo "Child process started."
-  echo "Child process ID: $$"
-  sleep 2
-  echo "Child process finished."
-) &
-echo "Parent is doing other work..."
-wait
-echo "Parent process finished."
+3. fork => ():
+#include <stdio.h>
+#include <unistd.h>
+int main() {
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork failed");
+        return 1;
+    } else if (pid == 0) {
+        printf("Child PID: %d\n", getpid());
+    } else {
+        printf("Parent PID: %d\nChild PID: %d\n", getpid(), pid);
+    }
+    return 0;
+}
+pipes => ls -l | grep "file.txt"
+named pipes => mkfifo myp , ls -l myp , cat < myp
 ============================================================================================================================================================
-awk1.awk
-#!/usr/bin/awk -f 
-# Set the field separator to comma 
+7.a => awk
+default behavior : awk '{print}' file.txt
+print match lines : awk '/manager/ {print}' file.txt
+---
+NR(number of input records) => awk '{print NR,$0}' employee.txt   ,   awk 'NR==3, NR==6 {print NR, $1}' employee.txt
+NF(field separator character) => awk '{print $0,$NF}' employee.txt  
+FS(Field Separator) => awk 'BEGIN {FS=":"} {print $1, $2}' employee.txt
+RS(Record Separator) => awk 'BEGIN {RS=""} {print "Record:", $0}' file.txt   ,   awk 'BEGIN {RS=":"} {print "Record:", $0; print "-----"}' records.txt
+OFS(Output Field Separator) => awk 'BEGIN {OFS=" | "} {print $1, $2, $3}' employee.txt
+ORS(Output Record Separator) => awk 'BEGIN {ORS="---\n"} {print $0}' employee.txt
+---
+ awk 'length($0)<25 {print $0}' employee.txt 
+ awk '{if (length($0)>max) max = length($0)} END {print max}' employee.txt
+ awk 'END {print NR}' employee.txt
+7.b file.awk
+#!/usr/bin/awk -f  
 BEGIN { 
 FS="," 
 } 
-# Skip the first line (header) 
 NR == 1 { 
 next 
 } 
-# Print Name and Gender fields 
 { 
 print "Name: " $1 ", Department: " $3 
 }
 
 data.csv 
 cat data.csv
-Name,Position,Department,Salary
-ajay,manager,account,45000
-sunil,clerk,account,25000
-./awk1/awk data.csv
-Name: ajay, Department: account
-Name: sunil, Department: account
+Name,RollNo,Department,CGPA
+Anjali,CS101,Computer Science,8.7
+Ravi,EC102,Electronics,7.9
+Meena,ME103,Mechanical,8.2
+Vikram,CS104,Computer Science,9.1
+Farah,EE105,Electrical,7.5
+Arjun,ME106,Mechanical,8.4
+Divya,EC107,Electronics,8.0
+Suresh,EE108,Electrical,6.9
+./file/awk data.csv
+Name: Anjali, Department: Computer
+Name: Ravi, Department: Electronics .....
 ============================================================================================================================================================
-bash scripts
+6. I/O redirections and command substitutions:
+I/O redirection:
+1. Writing Output to a File: echo "hello" > file.txt
+2. Appending Output to a File: echo "hello" >> file.txt
+3. Writing Error Messages to a File: cd /dev/null 2> error.txt
+4. Redirecting Both stdout and stderr: bash fibonacci.sh &> op_err.txt
+5.  Reading Input from a File: cat file.txt > input.txt
+6. Piping Output to Another Command: 
+hereDoc.sh
+#!/bin/bash
+cat<<EOF 
+HEllo world
+Hello All
+EOF
+$ bash hereDoc.sh
+CMD substitution :
+cmdsub.sh
+c_date = `date` or $(date)
+echo "Today's date is : $c_date"
+---
+run => bash cmdsub.sh
+============================================================================================================================================================
+5. bash scripts
 1. greatest of 3 numbers:
 echo "Enter 3 numbers:" 
 read a 
@@ -258,3 +302,44 @@ fact=$((fact * a))
 a=$((a-1)) done 
 echo "the factorial is $fact" 
 ============================================================================================================================================================
+4. SED , GREP, EGREP , FGREP
+SED :
+1. substitution : sed 's/line/text/' text.txt
+2. deletion : sed '/2/d' text.txt
+3. print 
+3.1 : print specific line : sed -n '1,5p' text.txt
+3.2 : line with word a : sed -n '/a/p' text.txt
+3.3 print portion : sed -n 's[0-9]\+/NUM/p' text.txt  , sed -n '5,6p' text.txt  , sed 'p' text.txt
+-- 
+GREP :
+1. Search for a Pattern in a File:  grep "p" text.txt
+2. Regular Expressions: grep "^?*.a*" text.txt
+3. grep "^?*.a*|*.*a$" text.txt
+--
+EGREP : 
+1. Search for a Pattern in a File: egrep '*a$' text.txt
+2. Extended Regular Expressions: egrep "pattern1|pattern2" filename.txt   , egrep '^\a.*|*a$' text.txt
+--
+FGREP : 
+1. Fixed String Search: fgrep "al" text.txt
+2. Performance Optimization: fgrep -F "beta" text.txt
+____
+Options : 
+Case Insensitive Search (-i)  ,  Display Line Numbers (-n) , Invert Match (-v) , Count Matching Lines Only (-c)
+=========================================================================================================
+3. ZIPPING  & UNZIPPING 
+ZIP : -r  , -q , -9  , -u
+1. zip file.zip file.txt
+2. zip file.zip file.txt file2.txt file3.txt
+3. zip -r compressed_directory.zip directory_to_compress : zip -r srec.zip srec
+--
+UNZIP : -d , -l , -q , -o , -P , -u
+1. unzip compressed_file.zip
+2. unzip compressed_file.zip -d destination_directory
+========================================================================
+2.  File MAnagement and text processing:
+File management :  pwd  ,  ls  ,  cd  ,  mkdir  ,  rm  ,  cp  ,  mv  ,  touch
+Text processing : cat  ,  grep  ,  sed  ,  sort  ,  uniq  ,  awk 
+=========================================================
+1. commands
+man , uname , chmod , pwd , cd , ls , history , clear , grep , sudo , apt-get , rmdir , rm , mkdir , mv , sort , echo , cat , more , wc , head , tail , whoami , uniq , time , date , cal , nl (number of line) , touch , 
